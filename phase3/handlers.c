@@ -30,7 +30,7 @@ void NewProcHandler(func_p_t p) {  // arg: where process code starts
 	EnQ(pid, &run_q); 
    }
    //point proc_frame_p to into stack (to where best to place a process frame)
-   pcb[pid].proc_frame_p=(proc_frame_t *)&proc_stack[pid][0];
+   pcb[pid].proc_frame_p=(proc_frame_t *)&proc_stack[pid][PROC_STACK_SIZE-sizeof(proc_frame_t)];
    //fill out EFL with "EF_DEFAULT_VALUE|EF_INTR" // to enable intr!
    pcb[pid].proc_frame_p->EFL=EF_DEFAULT_VALUE|EF_INTR;
    //fill out EIP to p
@@ -88,7 +88,7 @@ void MutexLockHandler(void){
 		 pcb[run_pid].state=WAIT;
 		 EnQ(run_pid, &mutex.wait_q);
 	}
-	run_pid=-1;
+	run_pid=0;
 }
 void MutexUnlockHandler(void){
 	int pid;

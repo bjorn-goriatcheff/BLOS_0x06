@@ -83,10 +83,11 @@ void Kernel(proc_frame_t *proc_frame_p) {   // kernel code runs (100 times/secon
 	//reading EAX value
 	if(pcb[run_pid].proc_frame_p->EAX==100) GetPidHandler();
 	if(pcb[run_pid].proc_frame_p->EAX==4) WriteHandler();
-	if(pcb[run_pid].proc_frame_p->EAX==101) SleepHandler();
-        if(pcb[run_pid].proc_frame_p->EAX==102 && pcb[run_pid].proc_frame_p->EBX==UNLOCK) MutexUnlockHandler();
-        if(pcb[run_pid].proc_frame_p->EAX==102 && pcb[run_pid].proc_frame_p->EBX==LOCK) MutexLockHandler();
-
+	if(pcb[run_pid].proc_frame_p->EAX==101) SleepHandler(); 
+        if(pcb[run_pid].proc_frame_p->EAX==102){
+		if (pcb[run_pid].proc_frame_p->EBX==LOCK) MutexLockHandler();
+		if (pcb[run_pid].proc_frame_p->EBX==LOCK) MutexUnlockHandler();
+	}
    } 
    if (cons_kbhit()){
       key=cons_getchar();
