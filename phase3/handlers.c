@@ -82,3 +82,24 @@ void SleepHandler(void){
 	pcb[run_pid].state=SLEEPING;
 	run_pid=-1;
 }
+
+void MutexLockHandler(void){
+	if(mutex.lock==UNLOCK) mutex.lock=LOCK;
+        else{
+		EnQ(run_pid, &mutex.wait_q);
+		pcb[run_pid].state=WAIT;
+		run_pid=-1;
+	}
+	
+}
+
+void MutexUnlockHandler(void){
+	int pid;
+	if(mutex.wait_q.size==0) mutex.lock=UNLOCK;
+	else if(mutex.wait_q.size!=0) {
+		pid=DeQ(&mutex.wait_q);
+		EnQ(pid, &run_q);
+		pcb[pid].state=RUN;
+	}	
+}
+
