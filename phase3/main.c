@@ -1,7 +1,7 @@
 // main.c, 159
-// OS bootstrap and kernel code for OS phase 1
+// OS bootstrap and kernel code for OS Phase 3
 //
-// Team Name: OSFr_0x6 (Members: Bjorn Goriatcheff)
+// Team Name: BLOS_0x06 (Members: Bjorn Goriatcheff and Lawrence Ly)
 
 #include "spede.h"      // given SPEDE stuff
 #include "types.h"      // data types
@@ -17,6 +17,8 @@ unsigned int timer_ticks;
 q_t ready_q, run_q;     // processes ready to be created and runables
 pcb_t pcb[PROC_NUM];    // Process Control Blocks
 char proc_stack[PROC_NUM][PROC_STACK_SIZE]; // process runtime stacks
+mutex_t mutex;
+int pies;
 
 void ProcScheduler(void) {              // choose run_pid to load/run
    if(run_pid>0) return; // no need if PID is a user proc
@@ -38,13 +40,18 @@ int main(void) {  // OS bootstraps
    int i;
    run_pid=-1; // needs to find a runable PID
    timer_ticks=0; //inuit timer_ticks
+	 pies=0; 
+	
    //use your tool function MyBzero to clear the two queues
    MyBzero((char *)&run_q, sizeof(q_t));
    MyBzero((char *)&ready_q, sizeof(q_t));
    //enqueue 0~19 to ready_q (all PID's are ready)
    for(i=0; i<20;i++){
-	EnQ(i, &ready_q);
+			 EnQ(i, &ready_q);
    }
+	
+	 mutex.lock=UNLOCK;
+	
    //get the IDT_p (to point to/locate IDT, like in the lab exercise)
    IDT_p = get_idt_base();
    cons_printf("IDT located at DRAM addr %x (%d).\n", IDT_p);
@@ -71,18 +78,23 @@ void Kernel(proc_frame_t *proc_frame_p) {   // kernel code runs (100 times/secon
    pcb[run_pid].proc_frame_p = proc_frame_p;
 
    //reading proc_frame_p event_type
-   if(pcb[run_pid].proc_frame_p->event_type==TIMER_EVENT) TimerHandler();   //call the timer even handler routine to handle the timer interrupt event 
-   if(pcb[run_pid].proc_frame_p->event_type==SYSCALL_EVENT){ // call Service
+   if(proc_frame_p->event_type==TIMER_EVENT) TimerHandler();   //call the timer even handler routine to handle the timer interrupt event 
+   if(proc_frame_p->event_type==SYSCALL_EVENT){ // call Service
 	//reading EAX value
-	if(pcb[run_pid].proc_frame_p->EAX==100) GetPidHandler();
-	if(pcb[run_pid].proc_frame_p->EAX==4) WriteHandler();
-	if(pcb[run_pid].proc_frame_p->EAX==101) SleepHandler();
+	if(proc_frame_p->EAX==100) GetPidHandler();
+	if(proc_frame_p->EAX==4) WriteHandler();
+	if(proc_frame_p->EAX==101) SleepHandler();
+	if(proc_frame_p->EAX==102){
+			if(proc_frame_p->ECX==LOCK) MutexLockHandler();
+			if(proc_frame_p->ECX==UNLOCK) MutexUnlockHandler();
 		
    } 
    if (cons_kbhit()){
       key=cons_getchar();
       if (key=='n') NewProcHandler(UserProc);
       if (key=='b') breakpoint();
+		  if (key=='c') NewProcHandler(CookerProc);
+		 	if (key=='e') NewProcHandler(EaterProc);
    }
 
    //call ProcScheduler() to select run_pid (if needed)
