@@ -1,6 +1,21 @@
 // syscalls.c
 // API calls to kernel system services
 #include "syscall.h"
+
+//Mutex
+void Mutex(int lock) {
+    asm("pushl %%EAX;
+         pushl %%ECX;
+         movl $102, %%EAX;
+         movl %0, %%ECX;
+         int $128;
+         popl %%ECX;
+         popl %%EAX;
+        :
+        : "g" (lock)
+      );
+}
+
 // GetPid() call
 int GetPid(void) {          // no input, has return
    int pid; 
