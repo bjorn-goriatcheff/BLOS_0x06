@@ -13,6 +13,9 @@
 #define WRITE 4
 #define GETPID 100
 #define SLEEP 101
+#define MUTEX 102
+#define LOCK 0
+#define UNLOCK 1
 #define STDOUT 1
 
 typedef void (*func_p_t)(); // void-return function pointer type
@@ -43,5 +46,10 @@ typedef struct {             // generic queue type
    int size;                 // size is also where the tail is for new data
    int q[Q_SIZE];            // integers are queued in q[] array
 } q_t;
+
+typedef struct {
+   int lock;
+   q_t wait_q;
+}  mutex_t;
 
 #endif // _TYPES_H_
