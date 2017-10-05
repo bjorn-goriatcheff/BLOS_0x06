@@ -12,5 +12,7 @@ extern unsigned int timer_ticks;    //counter timer
 extern q_t ready_q, run_q;          // ready and runable PID's
 extern pcb_t pcb[PROC_NUM];         // 20 Process Control Blocks
 extern char proc_stack[PROC_NUM][PROC_STACK_SIZE]; // 20 process runtime stacks
+extern mutex_t mutex;
+extern int pies;
 
 #endif                              // endif of ifndef
