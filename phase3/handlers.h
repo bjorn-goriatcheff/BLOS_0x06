@@ -10,6 +10,8 @@ void TimerHandler(void);
 void GetPidHandler(void);
 void WriteHandler(void);
 void SleepHandler(void);
+void MutexLockHandler(void);
+void MutexUnlockHandler(void);
 
 
 #endif
