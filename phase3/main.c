@@ -78,15 +78,15 @@ void Kernel(proc_frame_t *proc_frame_p) {   // kernel code runs (100 times/secon
    pcb[run_pid].proc_frame_p = proc_frame_p;
 
    //reading proc_frame_p event_type
-   if(pcb[run_pid].proc_frame_p->event_type==TIMER_EVENT) TimerHandler();   //call the timer even handler routine to handle the timer interrupt event 
-   if(pcb[run_pid].proc_frame_p->event_type==SYSCALL_EVENT){ // call Service
+   if(proc_frame_p->event_type==TIMER_EVENT) TimerHandler();   //call the timer even handler routine to handle the timer interrupt event 
+   if(proc_frame_p->event_type==SYSCALL_EVENT){ // call Service
 	//reading EAX value
-	if(pcb[run_pid].proc_frame_p->EAX==100) GetPidHandler();
-	if(pcb[run_pid].proc_frame_p->EAX==4) WriteHandler();
-	if(pcb[run_pid].proc_frame_p->EAX==101) SleepHandler(); 
-        if(pcb[run_pid].proc_frame_p->EAX==102){
-		if (pcb[run_pid].proc_frame_p->EBX==LOCK) MutexLockHandler();
-		if (pcb[run_pid].proc_frame_p->EBX==LOCK) MutexUnlockHandler();
+	if(proc_frame_p->EAX==100) GetPidHandler();
+	if(proc_frame_p->EAX==4) WriteHandler();
+	if(proc_frame_p->EAX==101) SleepHandler(); 
+        if(proc_frame_p->EAX==102){
+		if (proc_frame_p->ECX==LOCK) MutexLockHandler();
+		if (proc_frame_p->ECX==UNLOCK) MutexUnlockHandler();
 	}
    } 
    if (cons_kbhit()){
@@ -102,4 +102,6 @@ void Kernel(proc_frame_t *proc_frame_p) {   // kernel code runs (100 times/secon
    ProcScheduler();
    ProcLoader(pcb[run_pid].proc_frame_p); // given the proc_frame_p of the run_pid
 }
-
+void Pr(){
+	cons_printf("bob");
+}

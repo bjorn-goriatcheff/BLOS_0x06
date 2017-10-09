@@ -5,14 +5,14 @@
 //Mutex
 void Mutex(int lock) {
    asm("pushl %%EAX;
-        pushl %%EBX;
+        pushl %%ECX;
         movl $102, %%EAX;
-        movl %0, %%EBX;
+        movl %0, %%ECX;
         int $128;
-        popl %%EBX;
+        popl %%ECX;
         popl %%EAX"
        :   
-       :  "g" (lock)
+       : "g" (lock)
     ); 
 
 }
@@ -36,7 +36,7 @@ void Write(int fileno, char *p) {
    asm("pushl %%EAX; //save registers
 	pushl %%EBX;
 	pushl %%ECX;
-	movl $4, %%EAX; // service #101
+	movl $4, %%EAX; // service #4
 	movl %0, %%EBX; //fileno
 	movl %1, %%ECX;  //char
 	int $128;
