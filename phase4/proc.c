@@ -15,18 +15,17 @@ void SystemProc(void) {
 }
 void UserProc(void) {
    char my_str[] = "  ";  // 2 spaces 
-   char str[] = "hello world"; 
-   while(1) {
-      my_str[0] = GetPid() + '0';  // fill out 1st space
-      Write(STDOUT, my_str);       // STDOUT fileno == 1
-      Sleep( GetPid() % 5 );       // sleep for a few seconds (PID 5?)
-      if( GetPid() % 2 == 0){
-	  Write(TERM1,my_str);
-	  Write(TERM1,str); 
-      }
-      else{
-	Write(TERM2,my_str);
-          Write(TERM2,str);
+   char str[] = " : hello world!\n\r"; 
+   int term;
+    term = (GetPid()%2==0)? TERM1 : TERM2 ;
+    while(1) {
+      
+	my_str[0] = GetPid() + '0';  // fill out 1st space
+      //Write(STDOUT, my_str);       // STDOUT fileno == 1
+      //Sleep( GetPid() % 5 );       // sleep for a few seconds (PID 5?) 
+	Write(term,my_str);
+	Write(term,str); 
+	Sleep( GetPid() % 5 ); 
    }
 }
 

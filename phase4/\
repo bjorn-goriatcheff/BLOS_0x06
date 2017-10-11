@@ -71,16 +71,13 @@ void GetPidHandler(void){
 void WriteHandler(void){
 	char* str;
 	int j;
-	str=(char *)pcb[run_pid].proc_frame_p->ECX;
 	if(pcb[run_pid].proc_frame_p->EBX==STDOUT){
+		str=(char *)pcb[run_pid].proc_frame_p->ECX;
 		cons_printf(str);
 	}
 	else{
-		while(*str){
-			outportb(pcb[run_pid].proc_frame_p->EBX + DATA, str);
-			for(j=0;j<50000;j++) asm("inb $0x80");
-			str++;
-		}
+		outportb(pcb[run_pid].proc_frame_p->EBX + DATA, (int)str);
+		for(j=0;j<50000;j++) asm("inb $0x80");
 	}
 
 }
