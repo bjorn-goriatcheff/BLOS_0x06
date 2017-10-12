@@ -20,13 +20,13 @@ void UserProc(void) {
       my_str[0] = GetPid() + '0';  // fill out 1st space
       Write(STDOUT, my_str);       // STDOUT fileno == 1
 
-      if( GetPid() % 2 == 0){
-	    Write(TERM1,my_str);
-	    Write(TERM1,str); 
+      if( GetPid() % 2 == 0){ //if Odd:Term1, if Even Term2:
+	    Write(TERM2,my_str);
+	    Write(TERM2,str); 
       }
       else{
-	Write(TERM2,my_str);
-        Write(TERM2,str);
+	Write(TERM1,my_str);
+        Write(TERM1,str);
       }
       Sleep( GetPid() % 5 );       // sleep for a few seconds (PID 5?)
 
