@@ -70,19 +70,19 @@ void GetPidHandler(void){
 
 void WriteHandler(void){
 	char* str;
+	int j;
 	if(pcb[run_pid].proc_frame_p->EBX==STDOUT){
 		str=(char *)pcb[run_pid].proc_frame_p->ECX;
 		cons_printf(str);
 	}
-	if(pcb[run_pid].proc_frame_p->EBX==TERM1){
-		
-		outportb(fileno, data);
+	else {
+		while(str*){
+			outportb(pcb[run_pid].proc_frame_p->EBX + DATA, str);
+			for(j=0; j<50000;j++) asm("inb $0x80");
+			str++;
+			}
 	}
-	if(pcb[run_pid].proc_frame_p->EBX==TERM2){
-		
-		outportb(fileno, data);
-    }
-
+	
 }
 
 void SleepHandler(void){
