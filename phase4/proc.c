@@ -16,18 +16,13 @@ void SystemProc(void) {
 void UserProc(void) {
    char my_str[] = "  ";  // 2 spaces 
    char str[] = " : hello world!\n\r"; 
+   int term;
+   term = (GetPid()%2==1)? TERM1 : TERM2 ; //TERM 1 Odd, TERM 2 Even
    while(1) {
       my_str[0] = GetPid() + '0';  // fill out 1st space
       Write(STDOUT, my_str);       // STDOUT fileno == 1
-
-      if( GetPid() % 2 == 0){ //if Odd:Term1, if Even Term2:
-	    Write(TERM2,my_str);
-	    Write(TERM2,str); 
-      }
-      else{
-	Write(TERM1,my_str);
-        Write(TERM1,str);
-      }
+      Write(term, my_str);	   //output to terminal my_str
+      Write(term, str);            //output to terminal str
       Sleep( GetPid() % 5 );       // sleep for a few seconds (PID 5?)
 
 }
