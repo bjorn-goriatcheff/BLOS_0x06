@@ -1,7 +1,7 @@
 // main.c, 159
-// OS bootstrap and kernel code for OS phase 1
+// OS bootstrap and kernel code for OS phase 4
 //
-// Team Name: OSFr_0x6 (Members: Bjorn Goriatcheff)
+// Team Name: OSFr_0x6 (Members: Bjorn Goriatcheff && Lawrence Ly)
 
 #include "spede.h"      // given SPEDE stuff
 #include "types.h"      // data types

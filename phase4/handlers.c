@@ -65,6 +65,7 @@ void TimerHandler(void) {
 }
 
 void GetPidHandler(void){
+	// The pid is given to the procframe
 	pcb[run_pid].proc_frame_p->EAX=run_pid; 		
 }
 
@@ -72,13 +73,18 @@ void WriteHandler(void){
 	char* str;
 	int j;
 	str=(char *)pcb[run_pid].proc_frame_p->ECX;
+	// check the default outpout (Linux bash)
 	if(pcb[run_pid].proc_frame_p->EBX==STDOUT){
 		cons_printf(str);
 	}
-	else{
+	// Check if wrong EBX
+	else if(pcb[run_pid].proc_frame_p->EBX!=0){
 		while(*str){
-			outportb(pcb[run_pid].proc_frame_p->EBX + DATA, str);
+			// Send char to TERM1 or TERM2
+			outportb(pcb[run_pid].proc_frame_p->EBX + DATA, *str);
+			// Wait for hardware
 			for(j=0;j<50000;j++) asm("inb $0x80");
+			// Next char
 			str++;
 		}
 	}
@@ -86,25 +92,38 @@ void WriteHandler(void){
 }
 
 void SleepHandler(void){
+	// Compute the waiting time regarding the PID
 	pcb[run_pid].wake_time=timer_ticks+100*pcb[run_pid].proc_frame_p->EBX;
+	// Update process'state
 	pcb[run_pid].state=SLEEPING;
+	// Process Scheduel
 	run_pid=-1;
 }
 void MutexLockHandler(void){
+	// If the pies are already UNLOCK
 	if(mutex.lock==UNLOCK) mutex.lock=LOCK;
+	// The pies are lock -> go waiting
         else{
+		// Add process to wait_q
 		EnQ(run_pid, &mutex.wait_q);
+		//Update process'state
 		pcb[run_pid].state=WAIT;
+		// Process Schedueler
 		run_pid=-1;
 	}
 	
 }
 void MutexUnlockHandler(void){
 	int pid;
+	// The wait_q is empty -> leave the pies UNLOCK
 	if(mutex.wait_q.size==0) mutex.lock=UNLOCK;
+	// The wait_q is not empty
 	else if(mutex.wait_q.size!=0) {
+		//Descrease wait_q
 		pid=DeQ(&mutex.wait_q);
+		// Run the process
 		EnQ(pid, &run_q);
+		// Update the state
 		pcb[pid].state=RUN;
 	}	
 }
