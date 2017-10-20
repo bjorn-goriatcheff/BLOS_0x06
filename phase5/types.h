@@ -19,6 +19,10 @@
 #define STDOUT 1		// Constant cons_printf call
 #define TERM1 0x2f8           //address of terminal1 
 #define TERM2 0x3e8		// address of terminal 2
+#define GETChar 103
+#define TERM1_EVENT 35
+#define TERM2_EVENT 36 
+
 typedef void (*func_p_t)(); // void-return function pointer type
 
 typedef enum {READY, RUN, SLEEPING, WAIT} state_t;
