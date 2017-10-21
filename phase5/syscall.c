@@ -2,6 +2,21 @@
 // API calls to kernel system services
 #include "syscall.h"
 
+//GetChar
+void GetChar(int fileno) {
+   asm("pushl %%EAX;
+        pushl %%EBX;
+        movl $103, %%EAX;
+        movl %0, %%EBX;
+        int $128;
+        popl %%EBX;
+        popl %%EAX"
+       :   
+       : "g" fileno, "=g" ((int)ch)
+    ); 
+    return ch;
+}
+
 //Mutex
 void Mutex(int lock) {
    asm("pushl %%EAX;
