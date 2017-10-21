@@ -114,7 +114,12 @@ void Kernel(proc_frame_t *proc_frame_p) {   // kernel code runs (100 times/secon
 		if (proc_frame_p->ECX==LOCK) MutexLockHandler();
 		if (proc_frame_p->ECX==UNLOCK) MutexUnlockHandler();
 	}
-   } 
+   }
+	
+   if(proc_frame_p->event_type==TERM1_EVENT) TermHandler(port);
+   if(proc_frame_p->event_type==TERM2_EVENT) TermHandler(port);
+   if(proc_frame_p->event_type==GETCHAR) GetCharHandler(fileno);	
+	
    if (cons_kbhit()){
       key=cons_getchar();
       if (key=='n') NewProcHandler(UserProc);
