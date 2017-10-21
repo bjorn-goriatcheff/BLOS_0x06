@@ -127,3 +127,12 @@ void MutexUnlockHandler(void){
 		pcb[pid].state=RUN;
 	}	
 }
+
+void GetCharHandler(){
+	
+}
+
+void TermHandler(){
+	
+	
+}
