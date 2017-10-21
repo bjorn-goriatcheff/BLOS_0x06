@@ -12,6 +12,8 @@ void WriteHandler(void);
 void SleepHandler(void);
 void MutexLockHandler(void);
 void MutexUnlockHandler(void);
+void GetCharHandler(void);
+void TermHandler(void);
 
 
 #endif
