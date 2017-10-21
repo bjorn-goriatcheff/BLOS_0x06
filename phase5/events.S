@@ -28,6 +28,13 @@ ENTRY(TimerEvent)           // will first push EFL, CS, EIP (hardware/circuit)
    pushl $32 
    jmp TestRest
 
+ENTRY(Term1Event)
+	pushl $35
+	jmp TestRest
+	
+ENTRY(Term2Event)
+	pushl $36
+	jmp TestRest
 
 TestRest:
    //push-all 
