@@ -17,6 +17,8 @@ __BEGIN_DECLS
 void TimerEvent(void);            // coded in events.S, assembler won't like this syntax
 void ProcLoader(proc_frame_t *);  // coded in events.S
 void SyscallEvent(void);
+void Term1Event(void);
+void Term2Event(void);
 
 __END_DECLS
 
