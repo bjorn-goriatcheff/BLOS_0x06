@@ -128,11 +128,23 @@ void MutexUnlockHandler(void){
 	}	
 }
 
-void GetCharHandler(){
+void GetCharHandler(int fileno){ // GetChar() call, like MutexLock()
+	int i;
 	
+	if(fileno == TERM1){
+		i = 0;
+	else{
+		i = 1;
+	}
 }
 
-void TermHandler(){
+void TermHandler(int port){ // IRQ3 or IRQ4, like MutexUnlock()
+	int i;
+	char ch;
 	
-	
+	if(port == TERM1){
+		i = 0;
+	else{
+		i = 1;
+	}
 }
