@@ -20,29 +20,21 @@ char proc_stack[PROC_NUM][PROC_STACK_SIZE]; // process runtime stacks
 mutex_t mutex;
 int pies;
 int port;
+q_t terminal_buffer, terminal_wait_queue;
 
 void InitTerms(int port) {
    int i;
 
 // set baud, Control Format Control Register 7-E-1 (data- parity-stop bits)
 // // raise DTR, RTS of the serial port to start read/write
-// Terminal 1
-   outportb(TERM1 + CFCR, CFCR_DLAB);             // CFCR_DLAB is 0x80
-   outportb(TERM1 + BAUDLO, LOBYTE(115200/9600)); // period of each of 9600 bauds
-   outportb(TERM1 + BAUDHI, HIBYTE(115200/9600));
-   outportb(TERM1 + CFCR, CFCR_PEVEN | CFCR_PENAB | CFCR_7BITS);
-   outportb(TERM1 + IER, 0);
-   outportb(TERM1 + MCR, MCR_DTR|MCR_RTS|MCR_IENABLE);
-   outportb(TERM1 + IER, IER_ERXRDY);
-   for(i=0;i<LOOP;i++) asm("inb $0x80");               // terminal H/W reset time
-   //Terminal 2
-   outportb(TERM2 + CFCR, CFCR_DLAB);             // CFCR_DLAB is 0x80
-   outportb(TERM2 + BAUDLO, LOBYTE(115200/9600)); // period of each of 9600 bauds
-   outportb(TERM2 + BAUDHI, HIBYTE(115200/9600));
-   outportb(TERM2 + CFCR, CFCR_PEVEN | CFCR_PENAB | CFCR_7BITS);
-   outportb(TERM2 + IER, 0);
-   outportb(TERM2 + MCR, MCR_DTR|MCR_RTS|MCR_IENABLE);
-   outportb(TERM2 + IER, IER_ERXRDY);
+// Terminal
+   outportb(port + CFCR, CFCR_DLAB);             // CFCR_DLAB is 0x80
+   outportb(port + BAUDLO, LOBYTE(115200/9600)); // period of each of 9600 bauds
+   outportb(port + BAUDHI, HIBYTE(115200/9600));
+   outportb(port + CFCR, CFCR_PEVEN | CFCR_PENAB | CFCR_7BITS);
+   outportb(port + IER, 0);
+   outportb(port + MCR, MCR_DTR|MCR_RTS|MCR_IENABLE);
+   outportb(port + IER, IER_ERXRDY);
    for(i=0;i<LOOP;i++) asm("inb $0x80");               // terminal H/W reset time
 
 }
@@ -68,7 +60,9 @@ int main(void) {  // OS bootstraps
    run_pid=-1; // needs to find a runable PID
    timer_ticks=0; //inuit timer_ticks
    pies=0;
-   
+   terminal_buffer[2] = 0;
+   terminal_wait_queue[2] = 0;	
+	
    //use your tool function MyBzero to clear the two queues
    MyBzero((char *)&mutex.wait_q, sizeof(q_t));
    MyBzero((char *)&run_q, sizeof(q_t));
@@ -87,7 +81,8 @@ int main(void) {  // OS bootstraps
    fill_gate(&IDT_p[TIMER_EVENT], (int)TimerEvent, get_cs(), ACC_INTR_GATE, 0); 
    fill_gate(&IDT_p[SYSCALL_EVENT], (int)SyscallEvent, get_cs(), ACC_INTR_GATE, 0);
    outportb(0x21, ~1); //PIC command
-   InitTerms(port);
+   InitTerms(TERM1);
+   InitTerms(TERM2);
    //first process
    NewProcHandler(SystemProc);
    //call ProcScheduler() to select the run_pid
