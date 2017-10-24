@@ -65,7 +65,7 @@ void Sleep(int sec){
 }
 //GetChar
 char GetChar(int fileno){
-    char ch;
+    int ch;
     asm("pusha;
 	movl $103, %%EAX; // service 103
 	movl %1, %%EBX; //fileno

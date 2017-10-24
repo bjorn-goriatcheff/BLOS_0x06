@@ -15,7 +15,7 @@ void SystemProc(void) {
 }
 void UserProc(void) {
    char my_str[] = "  ";  // 2 spaces 
-   char str[] = " : hello world:"; 
+   char str[] = " : Do you like this 159 guy?"; 
    int term;
    char ch;
     term = (GetPid()%2==1)? TERM1 : TERM2 ;

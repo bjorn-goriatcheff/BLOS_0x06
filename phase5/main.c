@@ -135,6 +135,3 @@ void Kernel(proc_frame_t *proc_frame_p) {   // kernel code runs (100 times/secon
    ProcScheduler();
    ProcLoader(pcb[run_pid].proc_frame_p); // given the proc_frame_p of the run_pid
 }
-void Pr(){
-	cons_printf("bob");
-}

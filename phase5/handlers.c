@@ -20,7 +20,7 @@ void NewProcHandler(func_p_t p) {  // arg: where process code starts
 
    pid=DeQ(&ready_q);
    //use tool function MyBzero to clear PCB and runtime stack
-   //MyBzero(proc_stack[pid], PROC_STACK_SIZE);
+   MyBzero(proc_stack[pid], PROC_STACK_SIZE);
    MyBzero((char *)&pcb[pid], sizeof(pcb_t));
    //set state of process in PCB
    //state_t s = RUN;
@@ -46,7 +46,7 @@ void TimerHandler(void) {
    for(i=0;i<PROC_NUM;i++){
 	if(pcb[i].state==SLEEPING && pcb[i].wake_time==timer_ticks){
 		EnQ(i, &run_q);
-		pcb[i].state=READY;
+		pcb[i].state=RUN;
 	}
    }
    //dismiss timer event (IRQ0)
@@ -55,9 +55,7 @@ void TimerHandler(void) {
    if (run_pid==0) return;
 
    pcb[run_pid].run_time++;
-   if(pcb[run_pid].run_time==TIME_SLICE){
-      //update/downgrade its state
-      pcb[run_pid].state=READY;
+   if(pcb[run_pid].run_time==TIME_SLICE){ 
       //queue it back to run queue
       EnQ(run_pid, &run_q);
       run_pid=-1;  // no process running anymore
