@@ -22,6 +22,7 @@
 #define SLEEP 101		  // Sleep syscall event id
 #define MUTEX 102		 // Mutex syscall event id
 #define GETCHAR 103
+#define PUTCHAR 104
 
 // Constant for services
 #define LOCK 0			//Mutex Lock Constant
