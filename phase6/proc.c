@@ -17,17 +17,17 @@ void UserProc(void) {
    char my_str[] = "  ";  // 2 spaces 
    char str[] = " : Do you like this 159 guy?"; 
    int term;
-   char ch;
-    term = (GetPid()%2==1)? TERM1 : TERM2 ;
-    while(1) { 
+   char get_str[100];
+   term = (GetPid()%2==1)? TERM1 : TERM2 ;
+   while(1) { 
 	my_str[0] = GetPid() + '0';  // fill out 1st space
-	Write(term,my_str);
-	Write(term,str);
-	ch=GetChar(term);
-	my_str[0]=ch;
-	
-	Write(term,my_str);
-	Write(term, "\n\r");
+	PutStr(term, my_str);
+	PutStr(term, str);
+
+	GetStr(term, get_str, 100);
+        PutStr(term, get_str);
+	  
+	PutStr(term, "\n\r");
 	Sleep( GetPid() % 5 ); 
    }
 }
