@@ -13,6 +13,7 @@ void SleepHandler(void);
 void MutexLockHandler(void);
 void MutexUnlockHandler(void);
 void GetCharHandler(int fileno);
+void PutCharHandler(int fileno);
 void TermHandler(int port);
 
 #endif

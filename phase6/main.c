@@ -1,5 +1,5 @@
 // main.c, 159
-// OS bootstrap and kernel code for OS phase 4
+// OS bootstrap and kernel code for OS phase 6
 //
 // Team Name: OSFr_0x6 (Members: Bjorn Goriatcheff && Lawrence Ly)
 

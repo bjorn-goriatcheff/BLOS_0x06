@@ -148,33 +148,43 @@ void PutCharHandler(int fileno){
 
 	if(fileno==TERM1) i=0; 
 	else  i=1;
+	// Read ch in ECX from PutChar call
 	ch=pcb[run_pid].proc_frame_p->ECX;
+	//Display char
 	outportb(fileno + DATA, ch);
+	// Block process
 	pcb[run_pid].state=WAIT;
 	EnQ(run_pid, &terminal_wait_queue[i]);
 	run_pid=-1;
 }
 
+// TermHandler called when a key is pressed in TERM0 or TERM2
 void TermHandler(int port){
 	int i, pid, indicator;
 	char ch;
 	if(port==TERM1)i=0 ; 
 	else i=1;
+	//Dismiss Timer Event
         if(i==0) outportb(0x20, 0x63);
         if(i==1) outportb(0x20, 0x64);
+	// Indicator : key pressed or char displayed
 	indicator=inportb(port + IIR);
+	// Key pressed
 	if(indicator==IIR_RXRDY){
+		//Read Char
 		ch=inportb(port + DATA);	
 		if(terminal_wait_queue[i].size==0){
 			EnQ(ch, &terminal_buffer[i]);
 		}
+		//There is a waiting process
 		else{
 			pid=DeQ(&terminal_wait_queue[i]);
 			pcb[pid].state=RUN;
 			pcb[pid].proc_frame_p->ECX=ch;
 			EnQ(pid, &run_q);	
 		}
-	}	
+	}
+	// Char displayed	
 	else{
 		if(terminal_wait_queue[i].size>0){
 			pid=DeQ(&terminal_wait_queue[i]);
