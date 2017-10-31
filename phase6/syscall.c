@@ -103,8 +103,26 @@ void GetStr(int fileno, char *p, int size){
 	
 	for(i=0;i<size-1;i++){		
 		ch=GetChar(fileno);
-		if(ch==(char)13 || ch==(char)13) break;
+		if(ch==(char)13 || ch==(char)13){
+			 PutChar(fileno, ch);	
+			 PutChar(fileno, '\n');
+			 break;
+		}
 		p[i]=ch;
+		PutChar(fileno, ch);
 	}	
 	p[i]='\0';	
+}
+
+int Fork(void){
+	int i;
+	asm("movl $2, %%EAX;
+	     int $128;
+	     movl %%EBX, %0"
+	     : "=g" ((int)i)
+             :
+             : "eax", "ebx", "ecx","edx","esp","ebp","esi","edi"
+	   );
+	return i;
+
 }	

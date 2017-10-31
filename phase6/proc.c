@@ -7,6 +7,7 @@
 #include "data.h"       // run_pid needed
 #include "proc.h"       // prototypes of processes
 #include "syscall.h"   // API of system service calls
+#include "tools.h"      //for MyStrcmp call
 
 void SystemProc(void) {
    while(1){
@@ -14,51 +15,30 @@ void SystemProc(void) {
    }
 }
 	
-void UserProc(void) {   // new user proc
-	int term;
+void ShellProc(void) {   // new user proc
+	int term, my_pid, forked_pid;
 	char my_str[] = " ";
-	char my_msg[] = ": Do you like that 159 guy? ";
+	char my_msg[] = ": (BLOS_0x06) Shell>";
 	char get_str[100];
-	term = (GetPid()%2 == 1)? TERM1 : TERM2;
+
 	while(1) {
-		my_str[0] = GetPid() + '0';  // fill out 1st space
+		my_pid=GetPid();
+		my_str[0] = my_pid + '0';  // fill out 1st space
+		term = (my_pid%2 == 1)? TERM1 : TERM2;
+	
 		PutStr(term, my_str);
          	PutStr(term, my_msg);
+	
 		GetStr(term, get_str, 100); // syscall will add null
-	        PutStr(term, get_str);
-		PutStr(term, "\n\r");
-         	Sleep( GetPid() % 5 );       // sleep for a few seconds (PID 5?)
+		if(MyStrcmp(get_str, "fork", 4) == 1) { //1 is the same
+			forked_pid = Fork();
+	
+			if(forked_pid == -1) PutStr(term, "ShellProc: cannot fork!\n\r");	
+         	}
+		//Sleep( GetPid() % 5 );       // sleep for a few seconds (PID 5?)
       	}
 }
 
 
 
-void CookerProc(void) {   // will be created by pressing 'c' key
-      int i;
-
-      for(;;) {
-         Mutex(LOCK);
-         if(pies == 99) {
-            cons_printf("+++++ Cooker %i: too many pies!\n", GetPid());
-         } else {
-            cons_printf("Cooker %i: making pie # %i...\n", GetPid(), ++pies);
-            for(i=0; i<LOOP; i++) asm("inb $0x80");      // pie-making time
-         }
-         Mutex(UNLOCK);
-      }
-}
-void EaterProc(void) {   // will be created by pressing 'e' key
-      int i;
-
-      for(;;) {
-         Mutex(LOCK);
-         if(pies == 0) {
-            cons_printf("----- Eater %i: no pie to eat!\n", GetPid());
-         } else {
-            cons_printf("Eater %i: eating pie # %i...\n", GetPid(), pies--);
-            for(i=0; i<LOOP; i++) asm("inb $0x80");
-         }
-         Mutex(UNLOCK);
-      }   
-}
 
