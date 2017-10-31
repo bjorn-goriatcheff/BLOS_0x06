@@ -11,4 +11,5 @@ char GetChar(int fileno);
 void PutChar(int fileno, char ch);
 void PutStr(int fileno, char *p);
 void GetStr(int fileno, char *p, int size);
+int Fork(void);
 #endif

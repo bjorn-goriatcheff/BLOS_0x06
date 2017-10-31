@@ -7,6 +7,7 @@
 #include "data.h"       // run_pid needed
 #include "proc.h"       // prototypes of processes
 #include "syscall.h"   // API of system service calls
+#include "tools.h"      //for MyStrcmp call
 
 void SystemProc(void) {
    while(1){
@@ -34,6 +35,8 @@ void ShellProc(void) {   // new user proc
 	
 			if(forked_pid == -1) PutStr(term, "ShellProc: cannot fork!\n\r");	
          	}
+		PutStr(term, get_str);
+		PutStr(term, "\n\r");
 		//Sleep( GetPid() % 5 );       // sleep for a few seconds (PID 5?)
       	}
 }
