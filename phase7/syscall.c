@@ -119,9 +119,9 @@ int Fork(void){
 	asm("movl $2, %%EAX;
 	     int $128;
 	     movl %%EBX, %0"
-	     : "=g" ((int)i)
+	     : "=g" (i) 
              :
-             : "eax", "ebx", "ecx","edx","esp","ebp","esi","edi"
+             : "eax", "ebx"
 	   );
 	return i;
 

@@ -30,7 +30,7 @@ void ShellProc(void) {   // new user proc
          	PutStr(term, my_msg);
 	
 		GetStr(term, get_str, 100); // syscall will add null
-		if(MyStrcmp(get_str, "fork", 4) == 1) { //1 is the same
+		if(MyStrcmp(get_str, "fork") == 1) { //1 is the same
 			forked_pid = Fork();
 	
 			if(forked_pid == -1) PutStr(term, "ShellProc: cannot fork!\n\r");	
