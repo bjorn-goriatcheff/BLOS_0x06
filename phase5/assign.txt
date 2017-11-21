@@ -1,0 +1,49 @@
+acramento State
+Computer Engineering/Computer Science
+CpE/CSc 159 Operating System Pragmatics (Fall 2017)
+
+Phase 5   Device Driver II: Interrupt Driven Input
+
+Goals
+
+    The goal of this phase is to learn how an input device can be handled. Input events are usually asynchronous. The example is the input from the keyboard of a terminal. The demo runtime accepts the n key to create UserProc processes to prompt to two terminals and read from them input of single key strokes. The prompting is done by the function introduced in the previous phase. The input, however, is the function to be achieved in this phase.
+
+    A kernel service will be provided to processes to deliver terminal input in the form of an ASCII character. Terminal input events are handled when they arrive. The handlers of these two events are not synchronized so they must be interfaced.
+
+    In order to interface the above syscall and the event handler, a process wait queue and an input buffer are needed. The wait queue queues processes that await terminal input (when there is not input yet), and the input buffer is used to store the terminal input when there is no processes calling GetChar(). This is similar to using a mutex.
+
+GetChar() Kernel Service
+
+    The kernel service to the process is given via the syscall char GetChar(int fileno). The fileno is either TERM1 or TERM2, to read a character typed in from either the 1st terminal or the 2nd terminal (DOS COM2 or COM3 port).
+
+    As a process calls GetChar(), it retrieves a character from the terminal input buffer, and continues. However, if the buffer happens to be empty, the process is blocked in the terminal wait queue instead. Hence, the GetChar() is potentially a blocking call similar to Mutex(LOCK).
+
+Terminal Input Events
+
+    As a key is pressed from the terminal, it will arrive at the data register of a serial port. This will trigger an IRQ interrupt event, and the handler will execute to read in the ASCII character.
+
+    The serial ports used to connect to terminals are COM2 and COM3. The input event is either IRQ3 or IRQ4, and their IDT entries are 35 and 36. The PIC mask will be set to for them (besides the timer IRQ0). The handler will also dismiss the IRQ.
+
+    The terminal input handler void TermHandler(int) reads the DATA of either TERM1 or TERM2 depending on the given argument set by the caller Kernel() checking the event type. The handler will buffer the input character to the terminal buffer when the terminal wait queue is empty. Otherwise, the first waiting process will be released and the character will be given to it. The above operation is similar to the handling of a Mutex(UNLOCK) call.
+
+Terminal Initialization and Data Structures
+
+    The terminal serial ports are to be initialized so they will trip IRQ signals to PIC when a terminal keyboard is pressed.
+
+    There are two IRQ signals associated with the two serial ports which will lead the CPU to look up in the IDT at two different entries to switch instructions. The PIC mask must also include the two IRQ channels associated with the two serial ports. The handling of terminal events must include sending the correct dismiss code to the PIC.
+
+    In order for the OS to buffer input (typing) from two terminals, two input buffers are needed. And, to queue processes waiting for input from the terminals, two wait queues are needed. Hence, associated with each terminal is one input buffer and one wait queue. These data structures are to be zero-filled during the OS bootstrap.
+
+Deliverables
+
+    As before, submit only source-code files (*.c *.h events.S) to your team dropbox on host Voyager, in the designated phase folder.
+
+    All other rules declared from previous phases regarding not to mess up submission directories and not to conduct plagiarism also apply. 
+
+Review Questions
+
+    How to construct a library call service such asvoid GetStr(int fileno, char *my_str) from the use of GetChar() calls? Similarly, can we also build PutChar() and PutStr() services?
+
+    With the above services at work, the full-duplex communication mode will be lacking. How can this issue to tackled?
+
+
