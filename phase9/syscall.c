@@ -64,6 +64,7 @@ char GetChar(int fileno){
    return (char)ch;
 }
 
+//PutChar
 void PutChar(int fileno, char ch){
 	asm("movl $104, %%EAX;
 	     movl %0, %%EBX;
@@ -74,7 +75,7 @@ void PutChar(int fileno, char ch){
 	     : "eax", "ebx", "ecx"
 	);
 }
-
+//PutStr
 void PutStr(int fileno, char *p){
 	while(*p!='\0'){
 		PutChar(fileno, *p);
@@ -82,23 +83,26 @@ void PutStr(int fileno, char *p){
 	}
 }
 
+
+//GetStr
 void GetStr(int fileno, char *p, int size){
 	char ch;
 	int i=0;
 	
 	for(i=0;i<size-1;i++){		
 		ch=GetChar(fileno);
-		if(ch==(char)13 || ch==(char)13){
-			 PutChar(fileno, ch);	
-			 PutChar(fileno, '\n');
+		if(ch == '\r') PutChar(fileno, '\n'); 
+		PutChar(fileno, ch);
+		if(ch== (char)10 || ch== (char)13){	
 			 break;
 		}
 		p[i]=ch;
-		PutChar(fileno, ch);
+
 	}	
 	p[i]='\0';	
 }
 
+//Fork
 int Fork(void){
 	int i;
 	asm("movl $2, %%EAX;
@@ -111,6 +115,7 @@ int Fork(void){
 	return i;
 
 }
+//Signal
 void Signal(int num, func_p_t addr){
         asm("
              movl $48, %%EAX;
@@ -123,10 +128,10 @@ void Signal(int num, func_p_t addr){
         );
 }
 
-
+//Exit
 void Exit(int exit_num){
-	asm("movl $1, %%EAX;
-             movl %0, %%EBX;
+	asm("movl $1, %%EAX; // EXIT service
+             movl %0, %%EBX; // EXIT NUM
 	     int $128"
 	     :
 	     : "g" (exit_num)
@@ -135,9 +140,10 @@ void Exit(int exit_num){
 	);
 }
 
+//WaitPid 
 int WaitPid(int *exit_num_p){
 	int child_pid;
-	asm("movl $1, %%EAX;
+	asm("movl $7, %%EAX;
 	     movl %1, %%EBX;
 	     int $128;
 	     movl %%ECX, %0"
