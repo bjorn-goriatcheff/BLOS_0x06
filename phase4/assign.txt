@@ -1,0 +1,35 @@
+acramento State
+Computer Engineering/Computer Science
+CpE/CSc 159 Operating System Pragmatics (Fall 2017)
+
+Phase 4   Device Driver I: Busy Wait Output
+
+Goal
+
+    The goal of this phase is to learn the basics of device drivers, and extend our OS services to peripheral devices. 
+
+Device Driver
+
+    A peripheral device is often coupled with the driver software that are in the form of event handlers. This method is oftern coined as a busy-wait method. The advantage is the kernel having control in the event handling. The kernel can issue a time-out and abort the task while servicing the request. The disadvantage is the lengthy runtime that may bog down the OS.
+
+    To handle an I/O device which is much slower than a CPU, the driver waits for its readiness (or can be deeemed a time-out). The service call to output to the terminal is the existing Write() syscall already coded from phase 2. It will be again called from UserProc() but the constant is either TERM1 or TERM2 (depending on the PID -- if odd number, TERM1; even, TERM2.)
+
+    The original handler WriteHandler() will extend its function to output the character string (albeit one character at a time) to the terminal port instead.
+
+    Instructions for programming details is depicted in WhatToCode.txt. Your code must be able to output to two different terminals correctly. 
+
+Deliverables
+
+    As before, the source code is to be submitted to your designated Voyager dropbox.
+
+    Usage of code from the past will be deemed as plagiarism. Not meeting requirements will incur significant grade point penalty. 
+
+Questions
+
+    Can the inefficient and lengthy handler WriteHandler() be elated off its long waiting duty with an interrupt-driven method? How can this be done?
+
+    Expand from the above, the concept of a "cooperative" OS (C.F. "preemptive"): voluntary sleep/delay calls, requesting to lower own scheduling priority (the "nice" unix command).
+
+    Can range checks on input arguments be simply handled just by functions coded in syscalls.c? What other details in OS can be revealed and entailed when trying to do so? 
+
+
