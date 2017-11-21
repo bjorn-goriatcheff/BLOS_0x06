@@ -1,0 +1,49 @@
+acramento State
+Computer Engineering/Computer Science
+CpE/CSc 159 Operating System Pragmatics (Fall 2017)
+
+Phase 6   Device Driver III: Character I/O and Library Calls
+
+Goals
+
+    The goal of this phase is to enable both terminal input and output to be interrupt-driven, and construct library services based on the I/O syscalls. 
+
+PutChar() Kernel Service
+
+    The new service void PutChar(int fileno, char ch) will be constructed as the twin function of GetChar() service. The handler for it: void PutCharHandler(int fileno), will send the character to the terminal port data register (instead of reading from it) and proceed to suspend (block) the calling process.
+
+    As the terminal receives the ASCII character and displays it, it will trigger an IRQ signal to indicate this to the COM port, and this will be handled by the TermHandler() and the handler will thus release (unblock) the previous calling process that got suspended.
+
+    Again, the kernel service to a user process is given via the syscall void PutChar(int fileno, char ch). The fileno is either TERM1 or TERM2, to send a character to one of the two terminals connected to either DOS COM2 (IRQ3) or COM3 (IRQ4) port. As a process calls PutChar(), it sends a character to the terminal to display and gets blocked until the terminal finishes and triggers handler TermHandler() which releases it. Hence, PutChar() is a blocking call.
+
+Terminal Handler for both Input/Output Events
+
+    In order to differentiate whether an IRQ event is triggered by pressing the keyboard from a terminal, or a character got done printing onto it, the IIR (Interrupt Indicator Register) in the serial port is read by the terminal handler to be checked. If it is equal to IIR_RXRDY, it's a keyboard event; or IIR_TXRDY, it is a character sent and displayed.
+
+    On the keyboard event, TermHandler() reads the DATA register from TERM1 or TERM2 port, and buffer the character or release a waiting process to receive the character read. If it is the display event, the handler will release any waiting process. (So the process can resume the character-by-character printing loop by issuing another PutChar() service.)
+
+    The terminal serial ports are to be initialized much as before (for any keyboard event), plus enabling the event of displaying a sent chracter. 
+
+Construction of Library Calls
+
+    The library call for getting an input character string is void GetStr(int fileno, char *p, int size). It will be with a loop calling the GetChar() service. For each character returned from GetChar(), it is placed into the string pointed by p (which advances in the loop), the loop should terminate as a RETURN or ENTER key (ASCII 13 or 10, CR or LF) is received, or as the receiving string runs out of space (check the given size against the character counts in the loop). GetStr() must also add a null character at the end of the string. Hence, when size is downto 1, the library service must break the loop to add the null character, and end its service.
+
+    The corollary library call is putting out a character string: void PutStr(int fileno, char *p). Since a string we have used so far is always null terminated, there's no size needed to be part of the given arguments. PutStr() is constructed with a loop calling PutChar() until null is pointed to by p (advanced in the loop). Again, each PutChar() call results blocking the calling process by its kernel handler, and only through an IRQ signal from the serial port indicating the terminal has printed the sent character the blocked process can be released to resume the string printing loop. 
+
+Deliverables
+
+    Correct errors in the grading results posted from phases 4 and before, or will get points deducted again. (Phase 5 code must have errors shown in phase 1~3 corrected, phase 4 must have errors from phases 1 and 2 corrected.)
+
+    As before, submit only source-code files (*.c *.h events.S) to your team dropbox on host Voyager, in the designated phase folder.
+
+    All other rules declared from previous phases regarding not to mess up submission directories and not to conduct plagiarism also apply. 
+
+Review Questions
+
+    With the library service of getting an input string as a whole, not seeing what you are typing (full-duplex communication mode is lacking) until the enter key. Whey?
+
+    How can the full-duplex communication issue to tackled? Should there be some typing returning at work automatically? If so, should this be implemented in the upper process service level or in the lower terminal handling level?
+
+    With a full-duplex communication, will a user process require to call PutStr() to show what is received after each GetStr()? 
+
+
