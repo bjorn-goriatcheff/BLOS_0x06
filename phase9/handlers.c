@@ -255,12 +255,14 @@ void ExitHandler(proc_frame_t *p){
 	int ppid, child_exit_num, *parent_exit_num_p;
 	
 	ppid=pcb[run_pid].ppid;
+	//The parent is not waiting
 	if(pcb[ppid].state!=WAITCHLD){
 		pcb[run_pid].state=ZOMBIE;
 		run_pid=-1;
 		if(pcb[ppid].sigchld_handler!=0){
 			InsertWrapper(ppid, pcb[ppid].sigchld_handler);
 		}
+	// the parent is waiting -> release
 	} else{
 		pcb[ppid].state=RUN;
 		EnQ(ppid, &run_q);
@@ -278,19 +280,29 @@ void ExitHandler(proc_frame_t *p){
 }
 
 void WaitPidHandler(proc_frame_t *p){
-	int i,child_pid, child_exit_num, *parent_exit_num_p;
+	int i,child_pid, flag, child_exit_num, *parent_exit_num_p;
+	flag=0;
 	for(i=0; i<PROC_NUM;i++){
-		if(pcb[i].state==ZOMBIE && pcb[i].ppid==run_pid) break;
+		if(pcb[i].state==ZOMBIE && pcb[i].ppid==run_pid){
+			flag=1;
+			child_pid=i;
+			break;
+		}
 	}
-	if(i==PROC_NUM-1){
-		pcb[run_pid].state=WAITPID;
+	// Not found
+	if(flag==0){
+		pcb[run_pid].state=WAITCHLD;
 		run_pid=-1;
+	// Found
 	} else{
-		p->ECX=i;
-		*(int*)p->EBX=pcb[i].proc_frame_p->EBX;
+		
+		p->ECX=child_pid;
+		child_exit_num=pcb[child_pid].proc_frame_p->EBX;
+		parent_exit_num_p=(int*)p->EBX;	
+		*parent_exit_num_p=child_exit_num;
 
-		EnQ(i, &ready_q);
-		pcb[i].state=READY;
+		EnQ(child_pid, &ready_q);
+		pcb[child_pid].state=READY;
 	}
 }
 
