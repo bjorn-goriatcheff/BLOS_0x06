@@ -1,0 +1,41 @@
+acramento State
+Computer Engineering / Computer Science
+CpE/CSc 159 Operating System Pragmatics (Fall 2017)
+
+Phase 7   Process Life Cycle I: the Magical Fork()
+Goal
+
+    To start a life cycle for a process, the magical one call, two returns int Fork(void) service arrives!
+
+    The Fork service is to duplicate the calling process (parent) with an identical runtime copy of itself (child). The service, when successfully done, creates a child process that runs from the continuation point in the instruction after int $128 in the syscall as its parent but within its runtime stack (local copies of varialbes). The I/O buffers (and file handles if any) are however shared. The return of a successful Fork call is the child PID to the calling (parent) process, and 0 to the newly-created child process; and this return number is usually checked to split their functions by program algorithms. 
+
+Programming Details
+
+    Besides the allocation of a PCB and runtime stack, a new process will also inherit its parent process' runtime environment which are typically all the files and I/O.
+
+    The ForkHandler first allocates a new PID as the index to a new process runtime stack space. It then clears and sets the content of the PCB, copy the parent's process stack to the child's. This includes the parent's process frame. The process frame pointer in the child's PCB should be adjusted to the new copy that is within its process runtime stack. In fact, all the register values originally point to within the parent's own stack space should be adjusted to the copy within the child's stack.
+
+    The adjustment of memory locations is the byte distance between the location of the parent's stack and the child's new stack. The process frame pointer in the child's PCB must be adjusted by the copy (from the parent) added with this distance.
+
+    Besides the process frame location, the stack pointer ESP values in the copied process frame also needs be adjusted. The same should also be applied to registers EBP, ESI, and EDI.
+    The way a process program is compiled into is heavily dependent on the use of stack frames at runtime. Each caller and callee function operates in its own stack frame and the base of this area is set into the register EBP. Therefore, all local identifiers in each caller and callee are based on a unique EBP. Therefore, a chain of EBP will require adjustment. Starting from the current EBP in the copied frame, where it points to in the stack memory contains the caller's EBP which will also be adjusted, and so on. This is the EBP Chain.
+
+    Follow carefully with the descriptions in WhatToCode.txt. It has listed all the programming steps in pseudo code, from the usage of a new register list in syscalls.c, clearing the terminal screens, to the loop that corrects the EBP chain of the new child process. 
+
+Deliverables
+
+    Correct errors in the grading results posted from phases #5 and before, or they will get point deductions again.
+
+    As before, submit only source-code files (*.c *.h events.S) to your team dropbox on host Voyager, in the designated phase folder.
+
+    All other rules declared from previous phases regarding not to mess up submission directories and not to conduct plagiarism also apply. 
+
+Review Questions
+
+    What does a child process inherit?
+
+    What is the usual way a child process gets to do different things from its parent?
+
+    How can the execl() service be constructed? 
+
+
