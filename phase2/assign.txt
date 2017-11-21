@@ -1,0 +1,42 @@
+acramento State
+Computer Engineering / Computer Science
+CpE/CSc159 Operating System Pragmatics (Fall 2017)
+Instructor: W. Chang
+
+Phase 2   System Service Calls
+Kernel Services to Processes
+
+    During the runtime of processes, all system services are requested through system-service calls (syscalls), in order for the kernel to check the validity of the request, executes safe code, synchronize processes (trapped and await for results). Our UserProc() will make requests to try out the three new services as the goals of this OS-construction phase: Write() GetPid(), and Sleep(). A system service call will cause the action to suspend the calling process in order to execute the service code. Afterward the process may either resume or be otherwise treated due to the outcome of what is being requested (I/O waits, resources handling, etc.).
+    The service calls are in syscalls.c in which inline assembly of CPU instructions are embedded, in order to invoke the kernel code as an event. Particularly, the "int #" instruction which is voluntarily coded to "interrupt" the process runtime itself and the hardware will assist to switch CPU to execute the kernel code. This is the main difference to a hardware event such as the timer. There is no PIC mask to set, or IRQ to dismiss.
+    After the int # code of a syscall, the process will eventually resume to execute the continuation code in the syscalls.c or return to its original code from the call. An example is the GetPid() call will retrieve the process ID via the CPU EAX register. The code of the service handler GetPidHandler would have placed the PID of the running process (temporarily suspended) into the process frame, to be later fetch by the syscall code as a function return value.
+    Similar to how TimerEvent is coded in events.S, the SyscallEvent is to be added. The address of this new code is to be added to the IDT at entry number 128.
+    Coding details are listed in the WhatToCode.txt. 
+
+Enable Kernel Services
+
+    The SYSCALL_EVENT is selected in the IDT at entry 128 (UNIX/Linux uses 0x80) where we shall register the address of a SyscallEvent code module similar to the TimerEvent in the events.S. Both code modules are to be changed so each will push its own identifier number into the process frame in the runtime stack. The TimerEvent shall push TIMER_EVENT while SyscallEvent 128. Afterward, both jump to a common routine TheRest to complete the rest of the code which is the code in the original TimerEvent.
+    Different from the handling of a timer event, a syscall event does not involve the PIC mask or dismissal of an IRQ. However, the API will be provided in a program file syscalls.c where asm() macros are used to embed CPU instructions including int 128 in order to "trap" the process and switch the CPU to run the SyscallEvent code.
+    Each API code module should prepare what are to be given to the kernel to perform the service, as well as receiving a return if any is supposed to be given back to the calling process. 
+
+Kernel Service Handlers
+
+    Each service is actually performed by a handler function in the program file handlers.c. A handler is called based on the service request number given to the register EAX of the CPU by the API code. This information will then be examined as the saved value of the register is part of the process frame "trapped" by the event handling code. The process frame pointer in the PCB determines which handler to be executed by the kernel main code.
+    For the GetPid() call, the service number is a constant GETPID 100, and the GetPidHandler() will be called upon to handle it. What is to be done there is to return the currently-running PID to the process via the process frame (using a register) which will be loaded back by the ProcLoader and the API code continues (after int 128) and it will then retrieve it as the API function return value.
+    The Write() call will send to the kernel the service request number (WRITE 4) in register EAX, the STDOUT number (1) in EBX, and the character array (address) in register ECX; in order for the kernel to call the handler WriteHandler to process it. (Albeit it is just a cons_printf() call in the handler.)
+    The SleepHandler() will compute the wake-up time of the process by adding the current time timer_tick and 100 x sleep seconds requested, and keept the result in the PCB. The state of the process is altered to SLEEPING and the running PID is reset to -1.
+    The TimerHandler() will first upcount the current time indicator timer_ticks and check if any processes need to be waken: loop through each PCB -- if asleep and wakeup time arrives, enqueue PID to the run queue and alter its state. Other code in the TimerHandler remains. 
+
+Deliverables
+
+    As before, via the SAMBA client smbclient to submit only the source files (not binary files or intermediate compiler files) into your team folder under the folder phase2. 
+
+Review Questions
+
+    Point out the differences between the setup and handling of a hardware interrupt (such as the timer), and a syscall?
+    Why bother saving the process frame pointer at the beginning of Kernel()?
+    How to check the wake time against the current time to wake? Will "==" be enough? Or a ">=" is needed?
+    What can happen with your current code if testing with "Sleep(0)" or "Sleep(-1)?" What is a good strategy to handle for these exceptions?
+    Can the current time become different to the real time (wall clock) after after given some runtime that is sufficiently lengthy?
+    What differs a cooperative OS versus a preemptive one? What can be the pros and cons? 
+
+
