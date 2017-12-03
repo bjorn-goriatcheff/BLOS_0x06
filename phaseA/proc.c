@@ -16,11 +16,15 @@ void SystemProc(void) {
 }
 
 void Aout(void){
-	int my_pid;
+	int my_pid, term;
 	int sec;
-	
+	//Get the pid of the process	
 	my_pid=GetPid();
+	// compute waiting time
 	sec=my_pid%5;
+	//choose terminal
+	term = (my_pid%2 == 1)? TERM1 : TERM2;
+	PutStr(term, "Aout");
 	if(sec==0)sec=5;
 	Sleep(sec);
 	Exit(my_pid * 100 );
@@ -44,12 +48,14 @@ void ShellProc(void) {   // new user proc
          	PutStr(term, my_msg);
 	
 		GetStr(term, get_str, 100); // syscall will add null
+		//FORK CALL
 		if(MyStrcmp(get_str, "fork") == 1) { //1 is the same
 			forked_pid = Fork();
 	
 			if(forked_pid == -1) PutStr(term, "ShellProc: cannot fork!\n\r");	
 			if(forked_pid > 0) CallWaitPidNow(); // parent waits, this will block	
-         	} else if(MyStrcmp(get_str, "fork&") == 1 || MyStrcmp(get_str, "fork &") == 1) {  // background runner
+         	}//FORK BACKGROUND
+		else if(MyStrcmp(get_str, "fork&") == 1 || MyStrcmp(get_str, "fork &") == 1) {  // background runner
 			Signal(SIGCHLD, CallWaitPidNow); // register handler before fork!
             		forked_pid = Fork();    // since child may run so fast & exit 1st
 
@@ -57,9 +63,34 @@ void ShellProc(void) {   // new user proc
                			PutStr(term, "ShellProc: cannot fork!\n\r");
                			Signal(SIGCHLD, (func_p_t)0); // cancel handler!
             		}
-		} else if(MyStrcmp(get_str, "exit") == 1) { // only try on child process
+		}//EXIT 
+		else if(MyStrcmp(get_str, "exit") == 1) { // only try on child process
           		  Exit(my_pid * 100);  // what if parent exits? Then child exits?
-         	}
+         	}//AOUT 
+		else if(MyStrcmp(get_str, "a.out") == 1){
+			forked_pid = Fork();
+			if(forked_pid == -1) PutStr(term, "ShellProc: cannot fork!\n\r");
+			if(forked_pid == 0){
+				Exec(Aout);
+			}
+			if(forked_pid > 0) CallWaitPidNow(); // parent waits, this will block
+
+		}//AOUT BACKGROUND 
+		else if(MyStrcmp(get_str, "a.out&") == 1 || MyStrcmp(get_str, "a.out &") == 1){
+			Signal(SIGCHLD, CallWaitPidNow); // register handler before fork!
+			forked_pid = Fork();    // since child may run so fast & exit 1st
+			if(forked_pid == -1) {
+                                PutStr(term, "ShellProc: cannot fork!\n\r");
+                                Signal(SIGCHLD, (func_p_t)0); // cancel handler!
+                        }
+			if(forked_pid == 0){
+                                Exec(Aout);
+                        }
+		}//LS
+		else if(MyStrcmp(get_str, "ls") == 1) PutStr(term, "./\n\r../\n\ra.out-rxrw 7217 June 6 1992 9:17\n\r");
+		//CLEAR
+		else if(MyStrcmp(get_str, "clear") == 1) PutStr(term, "\e[2J");
+		
 		//Sleep( GetPid() % 5 );       // sleep for a few seconds (PID 5?)
       	}
 }

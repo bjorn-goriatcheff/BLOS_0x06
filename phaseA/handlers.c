@@ -97,13 +97,13 @@ void SleepHandler(void){
 	// Process Scheduel
 	run_pid=-1;
 }
-void MutexLockHandler(void){
+void MutexLockHandler(int i){
 	// If the pies are already UNLOCK
-	if(mutex.lock==UNLOCK) mutex.lock=LOCK;
+	if(mutex[i].lock==UNLOCK) mutex[i].lock=LOCK;
 	// The pies are lock -> go waiting
         else{
 		// Add process to wait_q
-		EnQ(run_pid, &mutex.wait_q);
+		EnQ(run_pid, &mutex[i].wait_q);
 		//Update process'state
 		pcb[run_pid].state=WAIT;
 		// Process Schedueler
@@ -111,14 +111,14 @@ void MutexLockHandler(void){
 	}
 	
 }
-void MutexUnlockHandler(void){
+void MutexUnlockHandler(int i){
 	int pid;
 	// The wait_q is empty -> leave the pies UNLOCK
-	if(mutex.wait_q.size==0) mutex.lock=UNLOCK;
+	if(mutex[i].wait_q.size==0) mutex[i].lock=UNLOCK;
 	// The wait_q is not empty
-	else if(mutex.wait_q.size!=0) {
+	else if(mutex[i].wait_q.size!=0) {
 		//Descrease wait_q
-		pid=DeQ(&mutex.wait_q);
+		pid=DeQ(&mutex[i].wait_q);
 		// Run the process
 		EnQ(pid, &run_q);
 		// Update the state
@@ -252,7 +252,7 @@ void InsertWrapper(int pid, func_p_t handler){
 }
 
 void ExitHandler(proc_frame_t *p){
-	int ppid, child_exit_num, *parent_exit_num_p;
+	int i,ppid, child_exit_num, *parent_exit_num_p;
 	
 	ppid=pcb[run_pid].ppid;
 	//The parent is not waiting
@@ -272,6 +272,14 @@ void ExitHandler(proc_frame_t *p){
 		child_exit_num=p->EBX;
 		*parent_exit_num_p=child_exit_num;
 
+		//reclaim page
+		for(i=0;i<PAGE_NUM;i++){
+			if(page[i].r_pid==run_pid){
+				page[i].r_pid=-1;
+				break;
+			}
+		}
+
 		EnQ(run_pid, &ready_q);
 		pcb[run_pid].state=READY;
 		run_pid=-1;
@@ -280,17 +288,15 @@ void ExitHandler(proc_frame_t *p){
 }
 
 void WaitPidHandler(proc_frame_t *p){
-	int i,child_pid, flag, child_exit_num, *parent_exit_num_p;
-	flag=0;
+	int i,child_pid, child_exit_num, *parent_exit_num_p;
 	for(i=0; i<PROC_NUM;i++){
-		if(pcb[i].state==ZOMBIE && pcb[i].ppid==run_pid){
-			flag=1;
+		if(pcb[i].state==ZOMBIE && pcb[i].ppid==run_pid){	
 			child_pid=i;
 			break;
 		}
 	}
 	// Not found
-	if(flag==0){
+	if(i==PROC_NUM){
 		pcb[run_pid].state=WAITCHLD;
 		run_pid=-1;
 	// Found
@@ -300,9 +306,28 @@ void WaitPidHandler(proc_frame_t *p){
 		child_exit_num=pcb[child_pid].proc_frame_p->EBX;
 		parent_exit_num_p=(int*)p->EBX;	
 		*parent_exit_num_p=child_exit_num;
+	
+		//reclaim page
+		for(i=0;i<PAGE_NUM;i++){
+			if(page[i].r_pid==child_pid){
+				page[i].r_pid=-1;
+				break;
+			}
+		}
 
 		EnQ(child_pid, &ready_q);
 		pcb[child_pid].state=READY;
 	}
 }
 
+void ExecHandler(proc_frame_t *p){
+	int i;
+	for(i=0;i<PAGE_NUM;i++){
+		if(page[i].r_pid==-1) break;
+	}
+	page[i].r_pid=run_pid;	
+	MyMemcpy(page[i].addr,(char*)p->EBX, PAGE_SIZE);
+	p->EIP=(unsigned int)(func_p_t)page[i].addr;
+	*(proc_frame_t *)((int)page[i].addr + PAGE_SIZE - sizeof(proc_frame_t))=*p;
+	pcb[run_pid].proc_frame_p=(proc_frame_t *)((int)page[i].addr+PAGE_SIZE-sizeof(proc_frame_t));	
+}

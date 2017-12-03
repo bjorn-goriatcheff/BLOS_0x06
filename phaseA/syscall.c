@@ -3,13 +3,14 @@
 #include "syscall.h"
 #include "types.h"
 //Mutex
-void Mutex(int lock) {
+void Mutex(int id, int lock) {
    asm("movl $102, %%EAX;
-        movl %0, %%ECX;
+        movl %0, %%EBX;
+	movl %1, %%ECX;
         int $128"
        :   
-       : "g" (lock)
-       : "eax", "ecx"
+       : "g" (id), "g" (lock) 
+       : "eax", "ebx", "ecx"
     ); 
 }
 
@@ -76,19 +77,24 @@ void PutChar(int fileno, char ch){
 	);
 }
 //PutStr
-void PutStr(int fileno, char *p){
+void PutStr(int fileno, char *p){	
+	if(fileno==TERM1) Mutex(KB1, LOCK);
+	else Mutex(KB2, LOCK);
 	while(*p!='\0'){
 		PutChar(fileno, *p);
 		p++;
 	}
+	if(fileno==TERM1) Mutex(KB1, UNLOCK);
+        else Mutex(KB2, UNLOCK);
 }
 
 
 //GetStr
-void GetStr(int fileno, char *p, int size){
+void GetStr(int fileno, char *p, int size){	
 	char ch;
 	int i=0;
-	
+	if(fileno==TERM1) Mutex(SCREEN1, LOCK);
+        else Mutex(SCREEN2, LOCK);
 	for(i=0;i<size-1;i++){		
 		ch=GetChar(fileno);
 		if(ch == '\r') PutChar(fileno, '\n'); 
@@ -99,7 +105,9 @@ void GetStr(int fileno, char *p, int size){
 		p[i]=ch;
 
 	}	
-	p[i]='\0';	
+	p[i]='\0';		
+	if(fileno==TERM1) Mutex(SCREEN1, UNLOCK);
+        else Mutex(SCREEN2, UNLOCK);
 }
 
 //Fork
@@ -153,4 +161,16 @@ int WaitPid(int *exit_num_p){
 	);
 	return child_pid;
 }
+
+//Exec
+void Exec(func_p_t p){
+	asm("movl $11, %%EAX;
+	     movl %0, %%EBX;
+	     int $128"
+	     :
+	     : "g" ((int)p)
+	     : "eax", "ebx"
+	);
+}
+
 	

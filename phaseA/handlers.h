@@ -10,8 +10,8 @@ void TimerHandler(void);
 void GetPidHandler(void);
 void WriteHandler(void);
 void SleepHandler(void);
-void MutexLockHandler(void);
-void MutexUnlockHandler(void);
+void MutexLockHandler(int);
+void MutexUnlockHandler(int);
 void GetCharHandler(int fileno);
 void PutCharHandler(int fileno);
 void TermHandler(int port);
@@ -20,4 +20,5 @@ void InsertWrapper(int pid, func_p_t handler);
 void SignalHandler(proc_frame_t* p);
 void ExitHandler(proc_frame_t *p);
 void WaitPidHandler(proc_frame_t *p);
+void ExecHandler(proc_frame_t *p);
 #endif

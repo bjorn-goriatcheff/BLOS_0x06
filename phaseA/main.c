@@ -1,7 +1,7 @@
 // main.c, 159
-// OS bootstrap and kernel code for OS phase 6
+// OS bootstrap and kernel code for OS phase A
 //
-// Team Name: OSFr_0x6 (Members: Bjorn Goriatcheff && Lawrence Ly)
+// Team Name: OSFr_0x6 (Members: Bjorn Goriatcheff)
 
 #include "spede.h"      // given SPEDE stuff
 #include "types.h"      // data types
@@ -20,8 +20,9 @@ q_t term_kb_wait_q[2], term_screen_wait_q[2]; // Signals buffers
 
 pcb_t pcb[PROC_NUM];    // Process Control Blocks
 char proc_stack[PROC_NUM][PROC_STACK_SIZE]; // process runtime stacks
-mutex_t mutex;
+mutex_t mutex[4];
 int pies;
+page_t page[PAGE_NUM];
 
 void InitTerms(int port) {
    int i;
@@ -75,7 +76,7 @@ int main(void) {  // OS bootstraps
    pies=0;
    
    //use your tool function MyBzero to clear the two queues
-   MyBzero((char *)&mutex, sizeof(mutex_t));
+   MyBzero((char *)&mutex, sizeof(mutex_t)*4);
    MyBzero((char *)&run_q, sizeof(q_t));
    MyBzero((char *)&ready_q, sizeof(q_t));
    MyBzero((char *)&terminal_buffer, sizeof(q_t)*2);
@@ -87,7 +88,19 @@ int main(void) {  // OS bootstraps
    for(i=0; i<20;i++){
 	EnQ(i, &ready_q);
    }
-   mutex.lock=UNLOCK;
+   // Init pages
+
+   for(i=0; i<PAGE_NUM;i++){
+	page[i].addr=(char*)0xe00000 + i*PAGE_SIZE;
+	page[i].lru=0;
+	page[i].r_pid=-1;
+	MyBzero((char*)page[i].addr, PAGE_SIZE);
+	//cons_printf("page (%d) loc: %x. \n", i, page[i].addr);
+   }
+   mutex[0].lock=UNLOCK;
+   mutex[1].lock=UNLOCK;
+   mutex[2].lock=UNLOCK; 
+   mutex[3].lock=UNLOCK;
    //get the IDT_p (to point to/locate IDT, like in the lab exercise)
    IDT_p = get_idt_base();
    cons_printf("IDT located at DRAM addr %x (%d).\n", IDT_p);
@@ -125,12 +138,13 @@ void Kernel(proc_frame_t *proc_frame_p) {   // kernel code runs (100 times/secon
 	if(proc_frame_p->EAX==2) ForkHandler(proc_frame_p);
 	if(proc_frame_p->EAX==4) WriteHandler();
 	if(proc_frame_p->EAX==7) WaitPidHandler(proc_frame_p);
+	if(proc_frame_p->EAX==11) ExecHandler(proc_frame_p);
 	if(proc_frame_p->EAX==48) SignalHandler(proc_frame_p);
 	if(proc_frame_p->EAX==100) GetPidHandler();
 	if(proc_frame_p->EAX==101) SleepHandler(); 
         if(proc_frame_p->EAX==102){
-		if (proc_frame_p->ECX==LOCK) MutexLockHandler();
-		if (proc_frame_p->ECX==UNLOCK) MutexUnlockHandler();
+		if (proc_frame_p->ECX==LOCK) MutexLockHandler(proc_frame_p->EBX);
+		if (proc_frame_p->ECX==UNLOCK) MutexUnlockHandler(proc_frame_p->EBX);
 	}
 	if(proc_frame_p->EAX==103){
 		GetCharHandler(proc_frame_p->EBX);

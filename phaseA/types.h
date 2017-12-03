@@ -15,12 +15,15 @@
 #define PROC_NUM 20          // max number of processes
 #define Q_SIZE 20            // queuing capacity
 #define PROC_STACK_SIZE 4096 // process runtime stack in bytes
+#define PAGE_NUM 100
+#define PAGE_SIZE 4096
 
 // Kernel Services
 #define EXIT 1
 #define FORK 2
 #define WRITE 4			   // syscall id
 #define WAITPID 7		   //Wait Pid
+#define EXEC 11
 #define SIGNAL 48
 #define GETPID 100                // Syscall id
 #define SLEEP 101		  // Sleep syscall event id
@@ -40,6 +43,7 @@
 typedef void (*func_p_t)(); // void-return function pointer type
 
 typedef enum {READY, RUN, SLEEPING, WAIT, WAITCHLD, ZOMBIE} state_t;
+typedef enum {KB1, KB2, SCREEN1, SCREEN2} mutex_id_t;
 
 typedef struct { 
    unsigned int EDI;
@@ -76,5 +80,11 @@ typedef struct {	     //Mutex type
    int lock;		     // state of mutex
    q_t wait_q;		     // processes are added to the queue if lock
 } mutex_t;
+
+typedef struct{
+	char* addr;
+	int lru;
+	int r_pid;
+} page_t;
 
 #endif // _TYPES_H_

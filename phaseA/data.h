@@ -14,6 +14,7 @@ extern q_t terminal_buffer[2], terminal_wait_queue[2];
 extern q_t term_kb_wait_q[2], term_screen_wait_q[2];
 extern pcb_t pcb[PROC_NUM];         // 20 Process Control Blocks
 extern char proc_stack[PROC_NUM][PROC_STACK_SIZE]; // 20 process runtime stacks
-extern mutex_t mutex;
+extern mutex_t mutex[4];
 extern int pies;
+extern page_t page[PAGE_NUM];
 #endif                              // endif of ifndef

@@ -6,7 +6,7 @@
 int GetPid(void);         // no input, 1 return
 void Write(int, char*);
 void Sleep(int);
-void Mutex(int);
+void Mutex(int, int);
 char GetChar(int fileno);
 void PutChar(int fileno, char ch);
 void PutStr(int fileno, char *p);
@@ -15,4 +15,5 @@ int Fork(void);
 void Signal(int num, func_p_t addr);
 int WaitPid(int *exit_num_p);
 void Exit(int exit_num);
+void Exec(func_p_t p);
 #endif
