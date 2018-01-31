@@ -1,0 +1,46 @@
+acramento State
+Computer Engineering / Computer Science
+CpE/CSc 159 Operating System Pragmatics (Fall 2017)
+
+Phase 8   Process Life Cycle II: Runtime Redirection via Signal()
+Goal
+
+    Here we shall cater the well-framed Signal() service to user processes. The purpose of such a service is to for customized routines to be activated upon a certain event. The event is one of the conditions termed as signals, e.g., when ctrl-c is pressed or when a child process exits, etc. (Enter shell command kill -l to see the list of signal names (or in /usr/include/bits/signum.h).
+
+    The syscall Signal(int signal_num, func_p_t handler) request the OS to redirect the process runtime flow to the user's handler routine as the signal (condition) occurs, and then the process resumes as if the handler was called as a subroutine. Otherwise, the default kernel handling routine (if defined) will be used.
+
+    The given Ouch() code will be the handler for signal SIGINT. The Shell process will register the handler by using the Signal() service (just once, before its loop) and after, Ouch() will be activated whenever the user press ctrl-c. Since child processes inherit parents' signal handling capabilities (with a real OS), during the child process creation (in the ForkHander), signal handler registries must also be copied from parent's PCB to child's. Hence, the new ShellProc also respond to ctrl-c the same way. 
+
+Runtime Redirection
+
+    In order to redirect the runtime flow of a process. The runtime stack is to be altered. As the signal event occurs, the original running point (when the process is to be loaded to run) will be changed to the handler, while the real returning point will be moved as the return instruction onto the stack. At the end of the handler code it contains a CPU instruction ret which will pop from the stack the original returning point.
+
+    Loading the process frame back to the CPU will resume the process but at the start of the handler since EIP in the process frame will be altered to the start of the handler code. The process frame needs be moved down (toward the low address), in order to insert the original EIP (for ret to pop as the handler routine ends).
+
+    However, this means the handler will inherit other CPU registers from the original runtime instruction, and may adversely change them. An ideal handler will first push them and subsequently pop them back before returning (to resume from the original runtime point).
+
+    Since we know in the real practice a user's handler is never required to program the aforementioned push-pop provision; an additional wrapper is needed to wrap around the user's handler, in order to do the push before calling/running the handler and pop after.
+
+    Hence, a void Wrapper(func_p_t handler) becomes the resumed runtime point, with the argument of the user's handler for it to call instead. To implant an argument, is to place it one position above the original runtime return address in the process runtime stack. (This is similar to how Kernel() is called with an argument, and how ProcLoader gets the argument.)
+
+    Run Demo.dli, and follow carefully what stated in WhatToCode.txt. Use two wait queues for each terminal instead of one, so the the I/O IRQ events can be separately and handled. 
+
+Deliverables
+
+    Correct errors in the grading results once they get posted (phases #6 and before), or they will get point deductions again.
+
+    As before, submit only source-code files (*.c *.h events.S) to your team dropbox on host Voyager, in the designated phase folder.
+
+    All other rules declared from previous phases regarding not to mess up submission directories and not to conduct plagiarism also apply. 
+
+Review Questions
+
+    How can the process request to cancel its signal handler?
+
+    How can a default signal handler be recovered (such as SIGINT) after the user process changed it with the Signal() service?
+
+    How can signal SIGCHLD be used to construct a background running process?
+
+    Do you know these signal-related services: pause(), raise(), kill(), signal(), atexit(), wait(), wait3()? 
+
+

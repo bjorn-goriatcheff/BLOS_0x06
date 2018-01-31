@@ -1,0 +1,47 @@
+acramento State
+Computer Engineering/Computer Science
+CpE/CSc 159 Operating System Pragmatics (Fall 2017)
+Instructor: W. Chang
+
+Phase 3   Mutex Interprocess Communication
+In Memoriam of Edsger Wybe Dijkstra (1930-2002)
+
+Description and Goal
+
+    In this development phase we extend our OS services with an interprocess communication (IPC) method: mutex. It provides a way processes can collaborate to avoid "racing/collision" conditions when required for their collective goal of operation.
+
+    To test our mutex service in a simple way, our OS will have a single mutex_t mutex. A mutex type is an int lock and a q_t wait_q. The data of an int pies will be accessed by processes but guarded by the mutex.
+
+    The mutex syscalls and services will be tested in a way similar to the producer-consumer paradigm. As multiple processes access a common data area, a mutual exclusion mehansim is required to avoid the racing condition. Each process shall first reqeuest to lock the mutex before proceeding to access the data for read/write. When the permission is granted (the mutex lock is unlocked and now be locked) the process is allowed to continue. When the mutex lock is already locked, the process will be blocked (in the mutex wait queue).
+
+    The process that first locks the mutex shall normally later issue to unlock it after the data access. This can releas a blocked process (to proceed with its turn to access data).
+
+    The part of the process code between locking and unlocking the mutex, is called the critical section since it access the guarded critical data.
+
+    The mutex is initially zeroed out and its lock is set to a constant UNLOCK. The number of pies is initially zero. The access to pies will be guarded by the mutex service calls during the runtime of processes CookerProc and EaterProc (each can be multiple). 
+
+Mutex Handlers
+
+    There is only one API call: void Mutex(int) to lock and unlock the mutex. This is done by giving either the constant LOCK 0 or UNLOCK 1 as the function argument. The asm() code thus "sends" a constant MUTEX to indicate the syscall service number, and the given argument to the kernel. The Kenel() examines these parameters and executes either of the two handlers: void MutexLockHandler(void) or void MutexUnlockHandler(void).
+
+    The void MutexLockHandler(void) first checks if the current mutex lock is UNLOCK. If so, it is set to LOCK and the calling process is not blocked (intact). Otherwise (as the mutex lock is already LOCK), the calling process is blocked: its PID is queued to the mutex wait queue, state altered to WAIT. And, the currently running PID is reset.
+
+    The void MutexUnlockHandler(void) first checks if the mutex wait queue is empty. If so, it sets the mutex lock to UNLOCK. Otherwise, the 1st waiting process is released: its PID is moved to the run queue, its state is updated.
+
+Deliverables
+
+    Source code only dropped to your destinated dropbox folder on the host Voyager as before. Use the correct folder. Incorrect usage including excessive irrelevant files and folder creations will incur penalty of grade-point deduction!
+
+    Usage of code from the past will be deemed as plagiarism. Not meeting requirements will incur significant grade point penalty. 
+
+Some Review Questions
+
+    Enter shell command on an ECS Linux host: ipcs -l for the information of IPC service parametrics in the system. Where are the "config" files an OS administrator use to set these resources? (/etc/sysctl.conf and /proc/sys/kernel/sem)
+
+    What will be the condition for using a semaphore instead of a mutex?
+
+    How can the OS prevent when a process tries to unlock a locked mutex without being the process locking it? Or to prevent a process from failing to unlock the mutex after locking it? How can an OS detect these conditions and be effective to resolve it? Is it obligated?
+
+    What are the conditions of starvation, deadlock, and livelock? Can you illustrate examples by program code? 
+
+

@@ -1,0 +1,69 @@
+acramento State
+Computer Engineering / Computer Science
+CpE/CSc 159 Operating System Pragmatics (Fall 2017)
+Instructor: W. Chang
+
+Phase 1   Time Sharing and Process Frames
+
+Introduction
+
+    In the 1st OS phase our kernel will be driven by the timer device we have learned from a lab exercise. The creation, scheduling, and running of some simple processes will be carried out in a time-sharing fashion.
+    There are actual and pseudo code given in the P-code folder, to help you construct this OS phase. What you learned handling timer events will be crucial to complete this phase, along with the knowledge of a process frame based on CPU-context switching that we had a glimpse in the timer-event handling exercise.
+    Again, copying given files can be easily done correctly by issuing a shell command such as: "cp ~changw/html/159/1/P-code/* ." (Note the "dot" symbol at the end (your current directory, as the destination.)
+    Avoid the copy-paste operation from a web browser since this may incur unwanted Ctrl-M characters that sometimes cause compiler errors. 
+
+What's in "P-code"
+
+    The P-code directory contains some actual and some pseudo code you need to program. During the bootstrap your OS will:
+        initialize the kernel data that our OS needs,
+        set up the control environment (for phase 1 it's only the timer-event handling) the kernel needs,
+        create the first process (SystemProc), and
+        load and run the first process. 
+
+    The SystemProc runs in an infinite loop of showing its PID (0) at about once a second, while timer events also occur in the background and thus trigger the kernel handler code (@ 100 Hz).
+
+    We allow the timer-event handler count the CPU runtime in order to monitor its running period. If this reaches the set time slice, the kernel may choose a different process to run (if available). A pool of processes that are runable will have their PID's queued (in the run_q) and to be selected to run. Our kernel can switch among these runable processes using a basic round-robin process-scheduling policy.
+
+    We also program the kernel code to catch as a special key stroke arrived at the Target PC, and treat it as an event. Two events are thus simulated:
+        n, create a new process by calling the kernel handler NewProcHandler(); and
+        b, go to the GDB prompt by calling breakpoint() to debug code or exit the whole runtime. 
+
+    One function the TimerHandler() performs is to upcount the run_time in the Process Control Block (PCB) of the process currently running. When this count equals to TIME_SLICE, the process is suspended with its PID moved back to the run queue. Other functions of TimerHandler() is to dismiss the IRQ0 (like in the timer-event exercise), and shows a period symbold periodically (3/4 of second) in order to verify its correctness.
+
+    The ProcScheduler() routine of the kernel code dequeues the 1st PID from the run queue (when user processes have been created). This is because user processes have higher priority to run, not the SystemProc process.
+
+    The PID's of processes ready to be created are initially queued in the ready_q, with an initial state READY. As a new process is created, a new PID from the ready queue is allocated. This PID is used as the index number into the PCB and proc_stack arrays to initialize its PCB and create its process frame in the stack. The PID is then queued to the run_q (except for SystemProc). The state of the newly created process is changed from READY to RUN.
+
+    The ready_q is initially given numbers 0 to 19 (all the PID's of our OS), while the run_q is initially empty. The first process to be created is the SystemProc process. The NewProcHandler is called to do this during the OS bootstrap (main). The PID will be 0 for the SystemProc process. As an exception, the PID 0 is not to be queued to the run_q or having its run_time be upcounted and checked against the TIME_SLICE. The system-process runtime is not limited by the TIME_SLICE.
+
+    Each of the two PID queues has a 20-integer array int q[] and int size which indicates the number of PID's currently queued in the array. The code file tools.c is to be completed to facilitate the enqueue and dequeue functions, plus a MyBzero() function to clear all bytes (to 0) from a given "char *" pointer.
+
+    A Process Control Block (PCB) contains:
+        int state, process state: READY or RUN;
+        int run_time: counting the timer events, reset zero when selected to run;
+        int life_time: accumulated run_time for the life of the process;
+        proc_frame_t *proc_frame_p: location of the saved CPU context in the process runtime stack. 
+
+    A process frame is first constructed by the NewProcHandler() as the initial CPU context for the CPU to load and start the runtime of the process. The context of the CPU can be saved into a process frame in the process' own runtime stack. Conversely, to resume the runtime of a process loading this frame back to the CPU. (ProcLoader() does this.) A Process Frame contains:
+        unsigned int PUSHA[8], stack space for "pusha";
+        unsigned int EIP, process instruction starting point;
+        unsigned int CS, process code segment location;
+        unsigned int EFL, CPU flags (with the interrupt-enabling bit set). 
+
+    The SystemProc process is created during the OS bootstrap code, the main() function, and the instruction pointer of the CPU (EIP) in the process frame is set to the beginning of the code of SystemProc(). Other processes created when pressing the 'n' key will have the EIP set to the code of the UserProc() function, instead.
+
+    The timer event must be dismissed (as how it was done in the timer handling exercise). Otherwise, the PIC will not notify the CPU any new timer events. (The CPU is still handling the current time event.)
+
+Deliverables
+
+    By now you should have formed your OS team with another partner (at most 2 persons in a team), and mail the instructor: the team name and member names. Team names must not have spaces or special symbols, and are case sensitive. So the instructor can create team directories for you to turn in source files.
+    Submit only the source code files. Do not submit any other files generated by the compiler or SPEDE tools. Source files are those with names end in .c, .h, and .S.
+    Penalty may apply if failing to follow instructions, including the dropbox usage on host Voyager. 
+
+Review Questions
+
+    What is a process frame and how is it used?
+    Why asm("sti"); is not used in phase 1? (In the timer event handling lab we did.)
+    How can the round-robin process scheduling be modified to carry out other types of scheduling policies? (There are so many in the OS studies...) 
+
+
